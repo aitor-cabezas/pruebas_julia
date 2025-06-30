@@ -5,7 +5,7 @@ using LaTeXStrings
 
 
 
-#   Ecuación de Burguers Diferencias Finitas 2D Método de Newton
+#   Ecuación de Burguers No-Estacionario Diferencias Finitas 2D Método de Newton
 
 
 function burguers(Nx::Int64,Ny::Int64,Nt::Int64,t0::Int64,tf::Int64)
