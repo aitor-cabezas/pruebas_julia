@@ -26,7 +26,7 @@ function burguers(Nx::Int64,Ny::Int64,Nt::Int64,t0::Int64,tf::Int64)
 
     #   Parámetros del problema
 
-    e   =   0.01        #Coeficiente de Difusión
+    e   =   0.01                        #Coeficiente de Difusión
     
     #   Discretización temporal
     
@@ -35,8 +35,10 @@ function burguers(Nx::Int64,Ny::Int64,Nt::Int64,t0::Int64,tf::Int64)
     u_k         =   zeros(Nt,Nx*Ny)     #Solución en el instante k
     u_k[1,:]    =   u0                  
     
+
+
+
     #   Euler implícito
-        
 
     #   Método de Newton
 
@@ -48,83 +50,86 @@ function burguers(Nx::Int64,Ny::Int64,Nt::Int64,t0::Int64,tf::Int64)
 
         while true
 
-        cont        +=  1
-        filas_int   =   zeros(Int64,0,1)
-        cols_int    =   zeros(Int64,0,1)
-        vals        =   zeros(Float64,0,1)
-        f_N         =   zeros(Float64,Nx*Ny)
+                    cont        +=  1
+                    filas_int   =   zeros(Int64,0,1)
+                    cols_int    =   zeros(Int64,0,1)
+                    vals        =   zeros(Float64,0,1)
+                    f_N         =   zeros(Float64,Nx*Ny)
 
-        #   Bucle nodos interiores
+                    #   Bucle nodos interiores
 
-            for i=2:Nx-1,   j=2:Ny-1
-            N           =   (i-1)*Ny+j
-            filas_int   =   vcat(filas_int,N,N,N,N,N)
-            cols_int    =   vcat(cols_int,N,N+1,N-1,N+Ny,N-Ny)
-            vals        =   vcat(vals,
-                                 1+(2*u_k[k,N]-u_k[k,N-Ny])*ht/hx + (2*u_k[k,N]-u_k[k,N-1])*ht/hy +2*e*ht*(1/hx^2+1/hy^2),
-                                 -e*ht/hy^2,
-                                 -u_k[k,N]*ht/hy-e*ht/hy^2,
-                                 -e*ht/hx^2,
-                                 -u_k[k,N]*ht/hx-e*ht/hx^2
-                                 )
+                        for i=2:Nx-1,   j=2:Ny-1
+                            N           =   (i-1)*Ny+j
+                            filas_int   =   vcat(filas_int,N,N,N,N,N)
+                            cols_int    =   vcat(cols_int,N,N+1,N-1,N+Ny,N-Ny)
+                            vals        =   vcat(vals,
+                                                1+(2*u_k[k,N]-u_k[k,N-Ny])*ht/hx + (2*u_k[k,N]-u_k[k,N-1])*ht/hy +2*e*ht*(1/hx^2+1/hy^2),
+                                                -e*ht/hy^2,
+                                                -u_k[k,N]*ht/hy-e*ht/hy^2,
+                                                -e*ht/hx^2,
+                                                -u_k[k,N]*ht/hx-e*ht/hx^2
+                                                )
 
-            f_N[N]      =   u_k[k,N]+
-                            u_k[k,N]*ht*(u_k[k,N]-u_k[k,N-Ny])/hx+  u_k[k,N]*ht*(u_k[k,N]-u_k[k,N-1])/hy-
-                            e*ht*((u_k[k,N+Ny]-2*u_k[k,N]+u_k[k,N-Ny])/hx^2 + (u_k[k,N+1]-2*u_k[k,N]+u_k[k,N-1])/hy^2)
-                            -u_k[k-1,N]
-                            
-            end
+                            f_N[N]      =   u_k[k,N]+
+                                            u_k[k,N]*ht*(u_k[k,N]-u_k[k,N-Ny])/hx+  u_k[k,N]*ht*(u_k[k,N]-u_k[k,N-1])/hy-
+                                            e*ht*((u_k[k,N+Ny]-2*u_k[k,N]+u_k[k,N-Ny])/hx^2+ (u_k[k,N+1]-2*u_k[k,N]+u_k[k,N-1])/hy^2)-
+                                            u_k[k-1,N]
+
+                        end
 
 
-        #   Bucle Frontera Inferior
+                    #   Bucle Frontera Inferior
 
-            for i=0:Nx-1
-            N           =   i*Ny+1
-            filas_int   =   vcat(filas_int,N)
-            cols_int    =   vcat(cols_int,N)
-            vals        =   vcat(vals,1.0)
-            f_N[N]      =   u_k[k,N] - 1.0
-            end
+                        for i=0:Nx-1
+                            N           =   i*Ny+1
+                            filas_int   =   vcat(filas_int,N)
+                            cols_int    =   vcat(cols_int,N)
+                            vals        =   vcat(vals,1.0)
+                            f_N[N]      =   u_k[k,N] - 1.0
+                        end
 
-        #   Bucle Frontera Derecha
-            for j=2:Ny
-            N           =   (Nx-1)*Ny+j
-            filas_int   =   vcat(filas_int,N)
-            cols_int    =   vcat(cols_int,N)
-            vals        =   vcat(vals,1.0)
-            f_N[N]      =   u_k[k,N]-(1.0 - y[j])
-            end
+                    #   Bucle Frontera Derecha
 
-        #   Bucle Frontera Superior
-            for i=1:Nx-1
-            N           =   i*Ny
-            filas_int   =   vcat(filas_int,N)
-            cols_int    =   vcat(cols_int,N)
-            vals        =   vcat(vals,1.0)
-            f_N[N]      =   u_k[k,N]-(1.0 - x[i])
-            end
+                        for j=2:Ny
+                            N           =   (Nx-1)*Ny+j
+                            filas_int   =   vcat(filas_int,N)
+                            cols_int    =   vcat(cols_int,N)
+                            vals        =   vcat(vals,1.0)
+                            f_N[N]      =   u_k[k,N]-(1.0 - y[j])
+                        end
 
-        #   Bucle Frontera Izquierda
-            for j=2:Ny-1
-            N           =   j
-            filas_int   =   vcat(filas_int,N)
-            cols_int    =   vcat(cols_int,N)
-            vals        =   vcat(vals,1.0)
-            f_N[N]      =   u_k[k,N] - 1.0
-            end
+                    #   Bucle Frontera Superior
 
-        J   =  sparse(filas_int[:],cols_int[:],vals[:],Nx*Ny,Nx*Ny)
+                        for i=1:Nx-1
+                            N           =   i*Ny
+                            filas_int   =   vcat(filas_int,N)
+                            cols_int    =   vcat(cols_int,N)
+                            vals        =   vcat(vals,1.0)
+                            f_N[N]      =   u_k[k,N]-(1.0 - x[i])
+                        end
 
-        u_knw =   u_k[k,:] .-J\f_N
+                    #   Bucle Frontera Izquierda
 
-       if maximum(abs.(u_knw.-u_k[k,:])) < tol || cont >= iter
-       println("Convergió en $cont iteraciones.")
+                        for j=2:Ny-1
+                            N           =   j
+                            filas_int   =   vcat(filas_int,N)
+                            cols_int    =   vcat(cols_int,N)
+                            vals        =   vcat(vals,1.0)
+                            f_N[N]      =   u_k[k,N] - 1.0
+                        end
 
-       break
+                    J       =  sparse(filas_int[:],cols_int[:],vals[:],Nx*Ny,Nx*Ny)
 
-       end
+                    u_knw   =   u_k[k,:] .-J\f_N
 
-       u_k[k,:]    =   u_knw
+                    if maximum(abs.(u_knw.-u_k[k,:])) < tol || cont >= iter
+                    println("Convergió en $cont iteraciones.")
+
+                        break
+
+                    end
+
+                    u_k[k,:]    =   u_knw
 
 
         end
