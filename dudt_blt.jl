@@ -45,7 +45,6 @@ function dudt_blt(tnm1::Float64,ui::Vector{Float64},param::parametros)
                      
     end
     
-       
     return dudt
  
  

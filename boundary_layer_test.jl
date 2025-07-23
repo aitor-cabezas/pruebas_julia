@@ -1,5 +1,6 @@
 using LinearAlgebra
 using SparseArrays
+using PyPlot
 
 #   Boundary layer test main
 
@@ -26,9 +27,10 @@ include("dudt_blt.jl")
 include("J_blt.jl")
 include("newton.jl")
 include("SDIRK_Alexander1977.jl")
+include("uexact_blt.jl")
 
 
-function boundary_layer_test(; Nx::Int64 = 20, Ny::Int64 = 20, t0::Int64 = 0,tf::Int64 = 1,Nt::Int64 = 10, epsi::Float64 = 0.001)
+function boundary_layer_test(; Nx::Int64 = 80, Ny::Int64 = 80, t0::Int64 = 0,tf::Int64 = 1,Nt::Int64 = 20, epsi::Float64 = 0.001, SC::Int=0)
     
     #   Discretización Espacial (x1x2 x y1y2)
     
@@ -49,7 +51,10 @@ function boundary_layer_test(; Nx::Int64 = 20, Ny::Int64 = 20, t0::Int64 = 0,tf:
     
     param       =   parametros(epsi,x,Nx,hx,y,Ny,hy,t0,tf,Nt,ht)
     
-    u           =   zeros(Float64,Nt,Nx*Ny) #   Matriz soluciones   
+    u           =   zeros(Float64,Nt,Nx*Ny) #Matriz soluciones aproximadas
+    uexact      =   zeros(Float64,Nt,Nx*Ny) #Matriz de soluciones exactas
+    errv        =   zeros(Float64,Nt)       #Error   
+    
     
     #   Condición Inicial
     
@@ -57,18 +62,43 @@ function boundary_layer_test(; Nx::Int64 = 20, Ny::Int64 = 20, t0::Int64 = 0,tf:
     unm1        =   copy(u0)        #   Solución en el instante n
     
     for k=1:Nt
-        
         un                  =   SDIRK(unm1,t[k],param)
         u[k,:]              =   copy(un)
+        uexact[k,:]         =   uexact_blt(epsi,t[k],x,Nx,y,Ny)
+        errv[k]             =   maximum(abs.(uexact[k,:] .- u[k,:]))  
         unm1                =   copy(un)
-        
     end
     
+    #   Representación de los resultados
+        
+    xmat        =   zeros(Nx,Ny)
+    ymat        =   zeros(Nx,Ny)
+    umat        =   zeros(Nx,Ny)
+    umatexact   =   zeros(Nx,Ny)
     
     
+    T       =   10
     
-    return u
+    for i=1:Nx,j=1:Ny
+        N                =   (i-1)*Ny + j
+        xmat[i,j]        =   x[i]
+        ymat[i,j]        =   y[j]
+        umat[i,j]        =   u[T,N]
+        umatexact[i,j]   =   uexact[T,N]
+    end
     
+    figure()
+    contourf(xmat, ymat, umat ,100 ,cmap="jet")
+    colorbar()
+    xlabel("x")
+    ylabel("y")
     
+    figure()
+    contourf(xmat, ymat, umatexact ,100 ,cmap="jet")
+    colorbar()
+    xlabel("x")
+    ylabel("y")
+
+    show(errv)
     
 end

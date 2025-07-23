@@ -24,7 +24,8 @@ function J_blt(ui::Vector{Float64},param::parametros)
         filas_int   =   vcat(filas_int,N,N,N,N,N)
         cols_int    =   vcat(cols_int,N,N+1,N-1,N+Ny,N-Ny)
         vals        =   vcat(vals,
-                             -ui[N]*(1/hx+1/hy) - 2*epsi*(1/hx^2 + 1/hy^2),
+                             -2*ui[N]*(1/hx+1/hy) +   ui[N-1]/hy + ui[N-Ny]/hx - 
+                             2*epsi*(1/hx^2 + 1/hy^2),
                              epsi/hy^2,
                              ui[N]/hy + epsi/hy^2,
                              epsi/hx^2,
