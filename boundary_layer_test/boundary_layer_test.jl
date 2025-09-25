@@ -30,7 +30,7 @@ include("SDIRK_Alexander1977.jl")
 include("uexact_blt.jl")
 
 
-function boundary_layer_test(; Nx::Int64 = 80, Ny::Int64 = 80, t0::Int64 = 0,tf::Int64 = 1,Nt::Int64 = 20, epsi::Float64 = 0.001, SC::Int=0)
+function boundary_layer_test(; Nx::Int64 = 80, Ny::Int64 = 80, t0::Int64 = 0,tf::Int64 = 1,Nt::Int64 = 20, epsi::Float64 = 0.1, SC::Int=0)
     
     #   Discretización Espacial (x1x2 x y1y2)
     
@@ -53,20 +53,62 @@ function boundary_layer_test(; Nx::Int64 = 80, Ny::Int64 = 80, t0::Int64 = 0,tf:
     
     u           =   zeros(Float64,Nt,Nx*Ny) #Matriz soluciones aproximadas
     uexact      =   zeros(Float64,Nt,Nx*Ny) #Matriz de soluciones exactas
-    errv        =   zeros(Float64,Nt)       #Error   
+    errv        =   zeros(Float64,Nt)
     
     
     #   Condición Inicial
     
-    u0          =   ones(Nx*Ny)
+    u0          =   uexact_blt(epsi, t[1], x, Nx, y, Ny)
+    u[1,:]      =   u0
+    uexact[1,:] =   uexact_blt(epsi, t[1], x, Nx, y, Ny)
+    errv[1]     =   maximum(abs.(uexact[1,:] .- u[1,:]))
+
     unm1        =   copy(u0)        #   Solución en el instante n
     
-    for k=1:Nt
-        un                  =   SDIRK(unm1,t[k],param)
+    for k=2:Nt
+        un                  =   SDIRK(unm1,t[k-1],param)
+        uex                 =   uexact_blt(epsi, t[k], x, Nx, y, Ny)
+
+        # Frontera izquierda
+
+        for j = 2:Ny-1
+            N = (j-1)*Nx + 1
+            un[N] = uex[N]
+        end
+
+        # Frontera inferior
+
+        for i = 1:Nx
+            N = i
+            un[N] = uex[N]
+        end
+
+        # Frontera derecha
+
+        for j = 2:Ny
+            N = j*Nx
+            un[N] = uex[N]
+        end
+
+        # Frontera superior
+
+        for i = 1:Nx-1
+            N = Nx*(Ny-1) + i
+            un[N] = uex[N]
+        end
+
         u[k,:]              =   copy(un)
-        uexact[k,:]         =   uexact_blt(epsi,t[k],x,Nx,y,Ny)
-        errv[k]             =   maximum(abs.(uexact[k,:] .- u[k,:]))  
         unm1                =   copy(un)
+        uexact[k,:]         =   uexact_blt(epsi,t[k],x,Nx,y,Ny)
+        errmax = 0.0
+        for j = 2:Ny-1,i = 2:Nx-1
+                N = (j-1)*Nx + i
+                err = abs(uexact[k,N] - u[k,N])
+                if err > errmax
+                   errmax = err
+                end
+        end
+        errv[k] = errmax
     end
     
     #   Representación de los resultados
@@ -77,10 +119,10 @@ function boundary_layer_test(; Nx::Int64 = 80, Ny::Int64 = 80, t0::Int64 = 0,tf:
     umatexact   =   zeros(Nx,Ny)
     
     
-    T       =   10
+    T       =   Nt
     
     for i=1:Nx,j=1:Ny
-        N                =   (i-1)*Ny + j
+        N                =   (j-1)*Nx + i
         xmat[i,j]        =   x[i]
         ymat[i,j]        =   y[j]
         umat[i,j]        =   u[T,N]
@@ -92,12 +134,17 @@ function boundary_layer_test(; Nx::Int64 = 80, Ny::Int64 = 80, t0::Int64 = 0,tf:
     colorbar()
     xlabel("x")
     ylabel("y")
+    title("Solución aprox")
     
     figure()
     contourf(xmat, ymat, umatexact ,100 ,cmap="jet")
     colorbar()
     xlabel("x")
     ylabel("y")
+    title("Solución analítica")
+
+    figure()
+    plot(t,errv)
 
     show(errv)
     

@@ -20,11 +20,11 @@ function J_blt(ui::Vector{Float64},param::parametros)
     
     for i=2:Nx-1, j=2:Ny-1
         
-        N           =   (i-1)*Ny + j
+        N           =   (j-1)*Nx + i
         filas_int   =   vcat(filas_int,N,N,N,N,N)
-        cols_int    =   vcat(cols_int,N,N+1,N-1,N+Ny,N-Ny)
+        cols_int    =   vcat(cols_int,N,N+Nx,N-Nx,N+1,N-1)
         vals        =   vcat(vals,
-                             -2*ui[N]*(1/hx+1/hy) +   ui[N-1]/hy + ui[N-Ny]/hx - 
+                             -2*ui[N]*(1/hx+1/hy) +   ui[N-Nx]/hy + ui[N-1]/hx -
                              2*epsi*(1/hx^2 + 1/hy^2),
                              epsi/hy^2,
                              ui[N]/hy + epsi/hy^2,
@@ -38,9 +38,9 @@ function J_blt(ui::Vector{Float64},param::parametros)
     
     #   Bucle Frontera Izquierda
         
-    for j=1:Ny
+    for j=2:Ny-1
         
-        N           =   j
+        N           =   (j-1)*Nx + 1
         filas_int   =   vcat(filas_int,N)
         cols_int    =   vcat(cols_int,N)
         vals        =   vcat(vals,1.0)
@@ -49,9 +49,9 @@ function J_blt(ui::Vector{Float64},param::parametros)
     
     #   Bucle Frontera Inferior
         
-    for i=2:Nx
+    for i=1:Nx
         
-        N           =   (i-1)*Ny + 1
+        N           =   i
         filas_int   =   vcat(filas_int,N)
         cols_int    =   vcat(cols_int,N)
         vals        =   vcat(vals,1.0)
@@ -62,7 +62,7 @@ function J_blt(ui::Vector{Float64},param::parametros)
         
     for j=2:Ny
         
-        N           =   (Nx-1)*Ny + j
+        N           =   j*Nx
         filas_int   =   vcat(filas_int,N)
         cols_int    =   vcat(cols_int,N)
         vals        =   vcat(vals,1.0)
@@ -71,9 +71,9 @@ function J_blt(ui::Vector{Float64},param::parametros)
     
     #   Bucle Frontera Superior
         
-    for i=2:Nx-1
+    for i=1:Nx-1
         
-        N           =   i*Ny
+        N           =   Nx*(Ny-1) + i
         filas_int   =   vcat(filas_int,N)
         cols_int    =   vcat(cols_int,N)
         vals        =   vcat(vals,1.0)
